@@ -1,0 +1,6 @@
+[submodule "plugin_common"]
+	path = plugin_common
+	url = https://gitlab.viomi.com.cn/app/devices-rn-2.0/plugin_common.git
+[submodule "kitchen_common"]
+	path = kitchen_common
+	url = https://gitlab.viomi.com.cn/app/devices-rn-2.0/company-kitchen/kitchen_common.git

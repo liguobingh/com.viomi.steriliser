@@ -1,0 +1,6 @@
+{
+  "package_name": "com.viomi.steriliser.android",
+  "versionCode": 60,
+  "min_sdk_level": "2.0.7",
+  "models": "viomi.steriliser.v1"
+}

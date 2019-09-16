@@ -1,0 +1,6 @@
+{
+  "package_name": "com.viomi.steriliser.ios",
+  "versionCode": 59,
+  "min_sdk_level": "2.0.0",
+  "models": "viomi.steriliser.v1"
+}
