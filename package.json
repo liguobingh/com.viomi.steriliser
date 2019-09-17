@@ -1,10 +1,8 @@
 {
-        "name": "project-com-viomi-steriliser",
-        "version": "1.0.21",
-        "scripts":{
-            "start":"node ../../bin/runProject.js"
-        },
-        "dependencies":{
-            
-        }
-    }
+    "name": "project-com-viomi-steriliser",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "node ../../bin/runProject.js"
+    },
+    "dependencies": {}
+}
