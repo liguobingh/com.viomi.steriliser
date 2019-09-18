@@ -1,34 +1,22 @@
-import React, { Component } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    Image,
-    ImageBackground,
-    TouchableOpacity,
-    Platform,
-    Button
-} from 'react-native';
+import React from 'react';
+import {Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import PropsConfig from '@Main/Config/PropsConfig';
-import { localizedStrings } from '@Main/Lang/LocalizableString';
-import { PX, WPX, HPX, DeviceWidth } from '@Main/Common';
+import {localizedStrings} from '@Main/Lang/LocalizableString';
+import {DeviceModel, DeviceWidth, HPX, PX, WPX} from '@Main/Common';
 import BaseView from '@Main/View/BaseView';
-import { DeviceModel } from '@Main/Common';
 import ErrorConfig from '@Main/Config/ErrorConfig';
-import Moment from '../../../../kitchen_common/Unit/Moment';
 
 export default class InfoView extends BaseView {
 
     constructor(props) {
         super(props);
-
     }
 
     /**
      * 获取状态标题文本
      */
     getStatusTitle() {
-        const { power, settemp, isInit } = this.controller.state;
+        const {workStatus, isInit} = this.controller.state;
         let title;
 
         //正在初始化
@@ -36,98 +24,53 @@ export default class InfoView extends BaseView {
             title = localizedStrings.init;
         }
         else {
-            if (power === PropsConfig.close) {
-                title = localizedStrings.waiting;
-            }
-            else {
-                title = settemp.toString();
+            if (workStatus === PropsConfig.workStatus.close) {
+                title = localizedStrings.workStatus.close;
+            } else if (workStatus === PropsConfig.workStatus.standby) {
+                title = localizedStrings.workStatus.standby;
+            } else if (workStatus === PropsConfig.workStatus.dry) {
+                title = localizedStrings.workStatus.dry;
+            } else if (workStatus === PropsConfig.workStatus.sterilize) {
+                title = localizedStrings.workStatus.sterilize;
+            } else if (workStatus === PropsConfig.workStatus.auto) {
+                title = localizedStrings.workStatus.auto;
+            } else if (workStatus === PropsConfig.workStatus.close_to_dry) {
+                title = localizedStrings.workStatus.close_to_dry;
             }
         }
-
-
         return title;
     }
 
     /**
-     * 获取摆风方向文本
+     * 获取当前温度
      */
-    getSwingTitle() {
-        //风摆的title
-        let swingTitle = '';
-        //支持水平风摆
-        if (DeviceModel.supportedSwingHor()) {
-            const { swingHor } = this.controller.state;
-            swingTitle += swingHor.title;
-        }
-        //支持水平和垂直
-        if (DeviceModel.supportedSwingHor() && DeviceModel.supportedSwingVer()) {
-            swingTitle += "   |   ";
-        }
-
-        if (DeviceModel.supportedSwingVer()) {
-            const { swingVer } = this.controller.state;
-            swingTitle += swingVer.title;
-        }
-
-        return swingTitle;
+    getCurTemp() {
+        const {temp} = this.controller.state;
+        let curTemp;
+        curTemp = temp.toString();
     }
 
     /**
-     * 获取定时文本
+     * 获取剩余时间
      */
-    getTimerTitle() {
-        let timerTitle = '';
-        const { power, timer } = this.controller.state;
-
-        //是否开机
-        const isOpen = (power === PropsConfig.open);
-        if (isOpen) {
-            if (timer.status === PropsConfig.open && timer.dateClose === PropsConfig.open && timer.offExeTime !== '') {
-                const closeDiff = Moment(timer.offExeTime).diff(new Date(), "seconds");
-                timerTitle = localizedStrings.will + timer.getLeftTimeText(closeDiff) + localizedStrings.after + localizedStrings.close;
-            }
-        }
-        else {
-            if (timer.status === PropsConfig.open && timer.dateOpen === PropsConfig.open && timer.onExeTime !== '') {
-                const openDiff = Moment(timer.onExeTime).diff(new Date(), "seconds");
-                timerTitle = localizedStrings.will + timer.getLeftTimeText(openDiff) + localizedStrings.after + localizedStrings.open;
-            }
-        }
-
-        return timerTitle;
-    }
-
-    /**
-     * 获取风速文本
-     */
-    getWindLevelTitle() {
-        const { wind_level } = this.controller.state;
-
-        for (const key in PropsConfig.wind_level) {
-            if (PropsConfig.wind_level[key] === wind_level) {
-                return localizedStrings.wind_level[key];
-            }
-        }
-
-        return null;
+    getLeftTime() {
+        const {leftTime} = this.controller.state;
+        let left;
+        left = leftTime.toString();
     }
 
     onExamine() {
-        const { examine } = this.controller.state;
-
+        const {examine} = this.controller.state;
         this.controller.checkedErrors();
-
         //故障数量大于1时，进入故障页面
         if (examine.errors.length > 1) {
             let errors = [];
-
             for (let i = 0; i < examine.errors.length; i++) {
                 const key = examine.errors[i].toString();
                 errors.push({
                     title: key + ": " + localizedStrings.error_title[key]
                 })
             }
-
             this.controller.props.navigation.navigate('ErrorPage', {
                 errors: errors,
                 showAccessIndicator: false
@@ -136,9 +79,9 @@ export default class InfoView extends BaseView {
     }
 
     render() {
-        const { power, mode, timer, examine, isPowering } = this.controller.state;
+        const {workStatus, temp, leftTime, examine} = this.controller.state;
         //是否开机
-        const isOpen = (power === PropsConfig.open);
+        const isWork = (workStatus !== PropsConfig.workStatus.close);
         //背景机型Icon
         let bg_icon = (DeviceModel.isOnWall() ? icons.none : null);
 
@@ -164,7 +107,7 @@ export default class InfoView extends BaseView {
         if (
             examine.errors.length > 0 &&
             examine.errors[0] !== ErrorConfig.none &&
-            isOpen
+            isWork
         ) {
             hasExamine = true;
             if (examine.errors.length > 1) {
@@ -175,7 +118,7 @@ export default class InfoView extends BaseView {
             }
         }
 
-        if (isOpen) {
+        if (isWork) {
             bg_icon = icons[mode.key];
         }
 
@@ -184,9 +127,9 @@ export default class InfoView extends BaseView {
                 <View style={styles.tips}>
                     {
                         timer.status === PropsConfig.open ?
-                        <Text style={styles.timerTips}>{timerTitle}</Text>
-                        :
-                        null
+                            <Text style={styles.timerTips}>{timerTitle}</Text>
+                            :
+                            null
                     }
                     {
                         hasExamine ?
@@ -198,7 +141,7 @@ export default class InfoView extends BaseView {
                                 }}
                                 style={styles.errorTips}
                             >
-                                <View style={styles.errorTips_bg} />
+                                <View style={styles.errorTips_bg}/>
                                 <Text style={styles.errorTips_text}>{examineTitle}</Text>
                             </TouchableOpacity>
                             :
@@ -208,10 +151,14 @@ export default class InfoView extends BaseView {
                 <View style={styles.content}>
                     <View style={styles.content_text}>
                         <View style={styles.statusView}>
-                            <Text style={[styles.text_title, isOpen ? { fontSize: 55, marginTop: -HPX(10) } : null]}>{statusTitle}</Text>
+                            <Text style={[styles.text_title, isWork ? {
+                                fontSize: 55,
+                                marginTop: -HPX(10)
+                            } : null]}>{statusTitle}</Text>
                             {
-                                isOpen ?
-                                    <Image style={styles.icon_unit} resizeMode='contain' source={require('../../../../resources/image/unit_icon.png')} />
+                                isWork ?
+                                    <Image style={styles.icon_unit} resizeMode='contain'
+                                           source={require('../../../../resources/image/unit_icon.png')}/>
                                     :
                                     null
                             }
@@ -222,37 +169,25 @@ export default class InfoView extends BaseView {
                                 null
                                 :
                                 <View>
-                                    <Text style={[styles.text_subtitle, { marginTop: HPX(3) }]}>{mode.title}<Text style={{ fontWeight: 'normal' }}>{' - '}</Text>{windLevelTitle}</Text>
-                                    <Text style={[styles.text_subtitle_2, { marginTop: HPX(6) }]}>{swingTitle}</Text>
+                                    <Text style={[styles.text_subtitle, {marginTop: HPX(3)}]}>{mode.title}<Text
+                                        style={{fontWeight: 'normal'}}>{' - '}</Text>{windLevelTitle}</Text>
+                                    <Text style={[styles.text_subtitle_2, {marginTop: HPX(6)}]}>{swingTitle}</Text>
                                 </View>
                         }
                     </View>
                     {
                         DeviceModel.isOnWall() ?
-                            <ImageBackground resizeMode={'stretch'} style={styles.bg_wall} source={require('../../../../resources/image/wall_bg.png')}>
-                                <Image resizeMode={'stretch'} style={styles.bg_wall_icon} source={bg_icon} />
+                            <ImageBackground resizeMode={'stretch'} style={styles.bg_wall}
+                                             source={require('../../../../resources/image/wall_bg.png')}>
+                                <Image resizeMode={'stretch'} style={styles.bg_wall_icon} source={bg_icon}/>
                             </ImageBackground>
                             :
-                            <ImageBackground resizeMode={'stretch'} style={styles.bg_stand} source={require('../../../../resources/image/stand_bg.png')}>
-                                <Image resizeMode={'stretch'} style={styles.bg_stand_icon} source={bg_icon} />
+                            <ImageBackground resizeMode={'stretch'} style={styles.bg_stand}
+                                             source={require('../../../../resources/image/stand_bg.png')}>
+                                <Image resizeMode={'stretch'} style={styles.bg_stand_icon} source={bg_icon}/>
                             </ImageBackground>
                     }
                 </View>
-                {/*{*/}
-                    {/*isOpen && DeviceModel.supportedAI() ?*/}
-                        {/*<TouchableOpacity*/}
-                            {/*onPress={() => {*/}
-                                {/*this.controller.triggerFunction(this.controller.state.ai);*/}
-                            {/*}}*/}
-                            {/*style={{ width: 120, height: 50, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', position:'absolute', alignSelf:'center', top:HPX(250) }}*/}
-                        {/*>*/}
-                            {/*<Text style={{ color: 'white', fontSize: 16 }}>*/}
-                                {/*{this.controller.state.ai.status ? 'AI：开启' : 'AI：关闭'}*/}
-                            {/*</Text>*/}
-                        {/*</TouchableOpacity>*/}
-                        {/*:*/}
-                        {/*null*/}
-                {/*}*/}
             </View>
         )
     }
