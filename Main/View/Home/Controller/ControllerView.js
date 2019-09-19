@@ -23,7 +23,7 @@ export default class ControllerView extends BaseView {
 const styles = StyleSheet.create({
     bg: {
         width: DeviceWidth,
-        height: HPX(252 + 25),
+        height: HPX(136),
         backgroundColor: 'transparent',
         alignItems: 'center',
         paddingTop: HPX(25)
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
 
     bg_2: {
         width: DeviceWidth,
-        height: HPX(252),
+        height: HPX(136),
         backgroundColor: 'white',
         borderRadius: 10,
         borderBottomLeftRadius: 0,
