@@ -1,22 +1,21 @@
 import React, {Component} from 'react';
-import {DeviceEventEmitter, InteractionManager, StyleSheet, View} from 'react-native';
+import {InteractionManager, StyleSheet, View} from 'react-native';
 import CommonAdapter from '../plugin_common/Adapter/CommonAdapter';
 import DataAdapter from '../plugin_common/Adapter/DataAdapter';
 import ProjectAdapter from '../plugin_common/Adapter/ProjectAdapter';
 import TitleBarWhite from '../plugin_common/Components/mi/ui/TitleBarWhite';
 
 import PropsConfig from '@Main/Config/PropsConfig';
-import UrlConfig from '@Main/Config/UrlConfig';
 import {localizedStrings} from '@Main/Lang/LocalizableString';
 // import NavigationBar from './View/NavigationBar';
-import Common, { HPX, DeviceWidth, DeviceHeight, DeviceModel } from '@Main/Common';
+import Common, {DeviceHeight, DeviceModel, DeviceWidth, HPX} from '@Main/Common';
 
 import CommonUnit from '../kitchen_common/Unit/CommonUnit';
 import InfoView from "./View/Home/Info/InfoView";
 import ControllerView from "./View/Home/Controller/ControllerView";
 import ControllerBarView from "./View/Home/Controller/ControllerBarView";
 
-const FunctionConfig = PropsConfig.function;
+const ModeConfig = PropsConfig.mode;
 const readPropsInterval = 4;
 
 export default class MainPage extends Component {
@@ -60,7 +59,6 @@ export default class MainPage extends Component {
             isInit: true,
             //是否正在开关机状态
             isPowering: false,
-
         }
 
         //是否网络正常
@@ -116,36 +114,48 @@ export default class MainPage extends Component {
     setMode(value) {
         if (!this.isNeting) {
             Common.showTips(localizedStrings.netError);
-            return;
+            return
         }
-
         this.state.mode.setId(value);
-
         this.setState({
             mode: this.state.mode
         })
-
-        this.props.navigation.setParams({navColor: NavColor[this.state.mode.key]})
-
+        this._props.navigation.setParams({navColor: NavColor[this.state.mode.key]})
         InteractionManager.runAfterInteractions(() => {
             const {mode} = this.state;
             console.log(mode);
             this.getData(mode.getMethod(), mode.getParams(), (isSuccess) => {
                 if (isSuccess) {
-                    // const str = localizedStrings.beEnabled + mode.title + localizedStrings.mode_str;
-                    // Common.showTips(str);
+                    const str = localizedStrings.beEnabled + mode.title + localizedStrings.mode_str;
+                    Common.showTips(str);
                 }
-            });
+            })
         })
     }
 
     /**
-     * 触发功能设置
-     * @param {*} item
+     * 设置自动烘干
      */
-    triggerFunction(func) {
+    setAuto(value) {
+        // if (!this.isNeting) {
+        //     Common.showTips(localizedStrings.netError);
+        //     return
+        // }
+        // this.state.auto_dry.setId(value);
+        // this.setState({
+        //     anto_dry: this.state.auto_dry
+        // })
+        // InteractionManager.runAfterInteractions(() => {
+        //     const {auto_dry} = this.state;
+        //     console.log(auto_dry)
+        //     this.getData(auto_dry.getMethod(), auto_dry.getParams(), (isSuccess) => {
+        //         if (isSuccess) {
+        //             const str = localizedStrings.beEnabled + auto_dry.title;
+        //             Common.showTips(str)
+        //         }
+        //     })
+        // })
     }
-
 
     // MARK: 网络访问
     /**
@@ -159,14 +169,10 @@ export default class MainPage extends Component {
             method: method,
             params: params
         }
-
         console.log(consoleData);
-
         CommonUnit.stopPropsLoop();
-
         DataAdapter.callMethodWithNolater(method, params, (isSuccess, result) => {
             CommonUnit.resumePropsLoop();
-
             if (callback) {
                 callback(isSuccess, result)
             }
@@ -184,37 +190,29 @@ export default class MainPage extends Component {
      */
     setProps(result) {
         const {status, datas, isUpdated, error} = result;
-
         this.getTimer();
-
         if (status == 0) {
             const {power, isInit} = this.state;
-
             if (isUpdated) {
                 let updateState = this.getPropsState(datas);
-
                 /**
                  * 初始化
                  */
                 if (isInit) {
                     updateState['isInit'] = false;
                 }
-
                 /**
                  * 电源开关发生改变时访问定时信息
                  */
                 if (power !== updateState['power']) {
                     this.getTimer();
                 }
-
                 this.setState(updateState, () => {
                     this.prePropsDatas = datas;
-
                     let navColor = NavColor.close;
                     if (updateState.power === PropsConfig.open) {
                         navColor = NavColor[updateState.mode.key];
                     }
-
                     this.props.navigation.setParams({navColor: navColor});
                 });
             }
@@ -268,26 +266,13 @@ export default class MainPage extends Component {
     render() {
         return (
             <View style={{flex: 1, justifyContent: 'space-between'}}>
-                {MainPage.getInfoView()}
-                {MainPage.getControllerView()}
+                <InfoView/>
+                <ControllerView>
+                    <View style={[styles.bg, {paddingTop: HPX(63)}]}>
+                        <ControllerBarView/>
+                    </View>
+                </ControllerView>
             </View>
-        )
-    }
-
-    static getInfoView() {
-        return (
-            <InfoView/>
-        )
-    }
-
-    static getControllerView() {
-        const {mode} = Common.mainPage.state;
-        return (
-            <ControllerView>
-                <View style={[styles.bg, {paddingTop: HPX(63)}]}>
-                    <ControllerBarView/>
-                </View>
-            </ControllerView>
         )
     }
 }

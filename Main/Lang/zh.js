@@ -16,5 +16,8 @@ export default {
         hot: "消毒",
         dry: "全自动"
     },
+    netError: '当前网络未能连接，请检查网络配置',
+    beEnabled: '已开启',
+    beDisabled: '已关闭',
 };
 

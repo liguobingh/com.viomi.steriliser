@@ -7,7 +7,7 @@ import {
     Text,
     InteractionManager
 } from 'react-native'
-import BaseView from '../BaseView';
+import BaseView from './BaseView';
 import { DeviceWidth, DeviceHeight } from '@Main/Common';
 import * as Animatable from 'react-native-animatable';
 import { localizedStrings } from '@Main/Lang/LocalizableString';

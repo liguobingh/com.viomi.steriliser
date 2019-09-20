@@ -2,9 +2,11 @@ import { localizedStrings } from '@Main/Lang/LocalizableString';
 import ModelConfig from '@Main/Config/ModelConfig';
 import BaseModel from '../../../kitchen_common/Base/BaseModel';
 import PropsConfig from '@Main/Config/PropsConfig';
-import DMFactory from '../DataModelFactory';
+import Mode from "../Mode";
+import FunctionModel from "../Function";
 
 const FunctionConfig = PropsConfig.mode;
+const AutoDryConfig = PropsConfig.auto_dry;
 /**
  * 型号
  */
@@ -80,29 +82,9 @@ export default class Model extends BaseModel {
     }
 
     /**
-     * 是否支持烘干
+     * 是否支持模式切换
      */
-    supportedDry() {
-        const list = [
-            ModelConfig.v1
-        ];
-        return this.isContained(list)
-    }
-
-    /**
-     * 是否支持消毒
-     */
-    supportedSterilize() {
-        const list = [
-            ModelConfig.v1
-        ];
-        return this.isContained(list)
-    }
-
-    /**
-     * 是否支持灯光功能（开机界面显示）
-     */
-    supportedAuto() {
+    supportedModeChange() {
         const list = [
             ModelConfig.v1
         ];
@@ -114,6 +96,19 @@ export default class Model extends BaseModel {
      */
     supportedOTA() {
         return true;
+    }
+
+    getMode(enumValue) {
+        return new Mode(enumValue);
+    }
+
+    static getFunction(enumValue) {
+        if (enumValue === FunctionConfig.timer) {
+            return new TimerModel(enumValue);
+        }
+        else {
+            return new FunctionModel(enumValue);
+        }
     }
 
     // MARK: 属性
@@ -144,66 +139,9 @@ export default class Model extends BaseModel {
             //剩余时间
             leftTime: PropsConfig.leftTime.min,
             //模式
-            mode: PropsConfig.mode.standby,
+            mode: getFunction(FunctionConfig.mode),
             //自动烘干
-            auto_dry:PropsConfig.auto_dry.close_auto
-        }
-
-        //睡眠功能
-        if (this.supportedSleep()) {
-            _props.push("sleep");
-            _states.sleep = DMFactory.getFunction(FunctionConfig.sleep);
-        }
-
-        //柔风功能
-        if (this.supportedSoftwind()) {
-            _props.push("softwind");
-            _states.softwind = DMFactory.getFunction(FunctionConfig.softwind)
-        }
-
-        //语音控制
-        if(this.supportedAudio()){
-            _props.push("audio");
-            _states.audio = DMFactory.getFunction(FunctionConfig.audio)
-        }
-
-        //定额省电功能
-        if (this.supportedStrongsave()) {
-            _props.push("strongsave");
-            _states.strongsave = DMFactory.getFunction(FunctionConfig.strongsave)
-        }
-
-        //节能
-        if (this.supportedEnergysave()) {
-            _props.push("energysave");
-            _states.energysave = DMFactory.getFunction(FunctionConfig.energysave)
-        }
-
-        //AI智能风
-        if (this.supportedAI()) {
-            _props.push("ai");
-            _states.ai = DMFactory.getFunction(FunctionConfig.ai)
-        }
-
-        //立式空调AI功能
-        if (this.supportedStandAI()) {
-            _props.push("ai_autostop");
-            _props.push("ai_sport");
-            _props.push("ai_followman");
-            _props.push("ai_avoidman");
-            _states.standAi = DMFactory.getFunction(FunctionConfig.standAi)
-        }
-
-        //水平扫风
-        if (this.supportedSwingHor()) {
-            _props.push("swingh");
-            _states.swingHor = DMFactory.getSwing(SwingConfig.swing.horizontal)
-        }
-
-        //垂直扫风
-        if (this.supportedSwingVer()) {
-            _props.push("swing");
-            _states.swingVer = DMFactory.getSwing(SwingConfig.swing.vertical)
+            auto_dry:getFunction(AutoDryConfig.auto_dry),
         }
 
         return {

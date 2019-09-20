@@ -1,15 +1,13 @@
 import React from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity} from 'react-native';
-import {DeviceHeight, DeviceModel, DeviceWidth, HPX, WPX} from '@Main/Common';
-import PropsConfig from '@Main/Config/PropsConfig';
-import BaseView from '@Main/View/BaseView';
+import {Image, InteractionManager, StyleSheet, Text, TouchableOpacity, View} from 'react-native'
+import {DeviceHeight, DeviceWidth, HPX, WPX} from '@Main/Common';
 import {localizedStrings} from '@Main/Lang/LocalizableString';
-import * as Animatable from 'react-native-animatable';
+import PropsConfig from '@Main/Config/PropsConfig'
+import BasePicker from '../../BasePicker';
 
 const ModeConfig = PropsConfig.mode;
-const ModeLang = localizedStrings.mode;
 
-export default class ControllerBarView extends BaseView {
+export default class ControllerBarView extends BasePicker {
     getKey(value) {
         for (const key in ModeConfig) {
             if (ModeConfig[key] == value) {
@@ -19,108 +17,79 @@ export default class ControllerBarView extends BaseView {
         return null;
     }
 
-    getIcons(value) {
-        for (let i = 0; i < FunctionForm.length; i++) {
-            const element = FunctionForm[i];
-            if (element.value == value) {
-                return element;
-            }
-        }
-        return null;
-    }
-
-    onItem(key) {
-        this.controller.triggerFunction(this.controller.state[key]);
+    onItem(value) {
+        this.hide();
+        InteractionManager.runAfterInteractions(() => {
+            this.controller.setMode(value);
+        })
     }
 
     renderItem(value) {
         const key = this.getKey(value);
-        const icons = this.getIcons(value);
-        let icon = icons.disableIcon;
-        if (this.controller.state.mode === PropsConfig.mode.standby) {
-            icon = icons.disableIcon;
-        } else if (this.controller.state.mode === PropsConfig.mode.dry) {
-        }
-
         return (
             <TouchableOpacity
                 key={value}
-                style={styles.function_item}
+                style={styles.item}
                 onPress={() => {
-                    this.onItem(key);
+                    requestAnimationFrame(() => {
+                        this.onItem(value);
+                    })
                 }}
             >
-                <Image style={[styles.function_item_icon, {opacity: disabled ? 0.6 : 1}]} source={icon}/>
-                <Text style={styles.function_item_text}>{ModeLang[key]}</Text>
+                <Image style={styles.item_image} source={icons[key]}/>
+                <Text style={styles.item_text}>
+                    {localizedStrings.mode[key]}
+                </Text>
             </TouchableOpacity>
         )
     }
 
-    render() {
-        let keyList = [ModeConfig.dry];
-        keyList.push(ModeConfig.sterilize);
-        keyList.push(ModeConfig.auto);
-
+    renderContent() {
+        const keyList = [ModeConfig.dry, ModeConfig.sterilize, ModeConfig.auto];
         return (
-            <Animatable.View
-                animation={'zoomIn'}
-                delay={300}
-                duration={500}
-                style={[styles.function, this.props.style]}
-            >
-                {
-                    keyList.map((item, index) => {
-                        return this.renderItem(item)
-                    })
-                }
-            </Animatable.View>
+            <View style={{marginBottom: HPX(24)}}>
+                <View style={styles.item_list}>
+                    {
+                        keyList.map((item, index) => {
+                            return this.renderItem(item)
+                        })
+                    }
+                </View>
+
+            </View>
         )
     }
 }
 
-const iconSize = DeviceHeight * 0.039;
-
 const styles = StyleSheet.create({
-    function: {
+    item_list: {
         width: DeviceWidth,
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: HPX(32),
+        paddingLeft: HPX(42),
+        paddingRight: HPX(42),
+    },
+    item: {
         alignItems: 'center',
         justifyContent: 'center'
     },
-
-    function_item: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: WPX(25),
-        marginRight: WPX(25)
+    item_image: {
+        width: WPX(56),
+        height: WPX(56)
     },
-
-    function_item_icon: {
-        width: 56,
-        height: 56
+    item_text: {
+        fontSize: 14,
+        color: '#666666',
+        marginTop: HPX(4)
     },
-
-    function_item_text: {
-        marginTop: WPX(6),
-        fontSize: 12,
-        color: '#3C3C3C'
+    item_text_gray: {
+        color: '#3C3C3C',
     }
 });
 
-const FunctionForm = [
-    {
-        value: ModeConfig.dry,
-        enableIcon: require('../../../../resources/dry_2x.png'),
-        disableIcon: require('../../../../resources/dry_dis_2x.png')
-    },
-    {
-        value: ModeConfig.sterilize,
-        enableIcon: require('../../../../resources/sterilize_2x.png'),
-        disableIcon: require('../../../../resources/sterilize_dis_2x.png')
-    },
-    {
-        value: ModeConfig.auto,
-        enableIcon: require('../../../../resources/auto_2x.png'),
-        disableIcon: require('../../../../resources/auto_dis_2x.png')
-    }
-];
+const icons = {
+    dry: require('../../../../resources/dry_dis_2x.png'),
+    sterilize: require('../../../../resources/sterilize_dis_2x.png'),
+    auto: require('../../../../resources/auto_dis_2x.png')
+}
